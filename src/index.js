@@ -4,16 +4,25 @@ const getBtn = document.querySelector('#get-students-btn');
 const postNew = document.querySelector('#add-student-form');
 const studentsTable = document.querySelector('#students-table');
 
+// Отримання студентів
 function getStudents() {
     return fetch(BASE_URL)
-        .then(r => r.json())
-        .then(data => console.log(data))
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Додаємо лог для перевірки
+            return data;
+        })
         .catch(error => console.error(error));
 }
 
+// Функція рендерингу студентів
 function renderStudents(students) {
-    const student = students.map(student => console.log(student));
-    const markUp = `
+    if (!Array.isArray(students)) {
+        console.error(students);
+        return;
+    }
+
+    studentsTable.innerHTML = students.map(student => `
         <tr data-id="${student.id}">
           <td>${student.id}</td>
           <td>
@@ -22,7 +31,7 @@ function renderStudents(students) {
           </td>
           <td>
             ${student.course}
-            <input type="number" id="newCourse-${student.id}" placeholder="Новий курс">
+            <input type="text" id="newCourse-${student.id}" placeholder="Новий курс">
           </td>
           <td>
             ${student.skills}
@@ -41,8 +50,8 @@ function renderStudents(students) {
             <button class="deleteBtn" data-id="${student.id}">Видалити</button>
           </td>
         </tr>
-      `;
-studentsTable.insertAdjacentHTML("beforeend", markUp);
+      `).join('');
+
     document.querySelectorAll('.updateBtn').forEach(button => {
         button.addEventListener('click', updateStudent);
     });
@@ -52,14 +61,17 @@ studentsTable.insertAdjacentHTML("beforeend", markUp);
     });
 }
 
+// Викликати при натисканні кнопки
 getBtn.addEventListener('click', () => {
-    getStudents().then(students => renderStudents(students));
+    getStudents().then(students => {
+        if (students) renderStudents(students);
+    });
 });
 
+// Додавання нового студента
 function addStudent(e) {
     e.preventDefault();
     const newStudent = {
-        id: document.querySelector('#id').value,
         name: document.querySelector('#name').value,
         course: document.querySelector('#course').value,
         skills: document.querySelector('#skills').value,
@@ -72,7 +84,7 @@ function addStudent(e) {
         body: JSON.stringify(newStudent),
         headers: { "Content-Type": "application/json" }
     })
-    .then(r => r.json())
+    .then(response => response.json())
     .then(() => getStudents().then(students => renderStudents(students)))
     .catch(error => console.error(error));
 }
@@ -80,24 +92,43 @@ function addStudent(e) {
 postNew.addEventListener('submit', addStudent);
 
 function updateStudent(e) {
-    e.preventDefault();
-    const studentId = e.target.dataset.id;
-    const updatedSt = {
-        name: document.querySelector(`#newName-${studentId}`).value,
-        course: document.querySelector(`#newCourse-${studentId}`).value,
-        skills: document.querySelector(`#newSkills-${studentId}`).value,
-        email: document.querySelector(`#newEmail-${studentId}`).value,
-        isEnrolled: document.querySelector(`#newIsEnrolled-${studentId}`).checked
-    };
+  e.preventDefault();
+  const studentId = e.target.dataset.id;
+  fetch(`${BASE_URL}/${studentId}`)
+      .then(r => r.json())
+      .then(currentStudent => {
+          const updatedSt = {
+              name: document.querySelector(`#newName-${studentId}`).value || currentStudent.name,
+              course: document.querySelector(`#newCourse-${studentId}`).value || currentStudent.course,
+              skills: document.querySelector(`#newSkills-${studentId}`).value || currentStudent.skills,
+              email: document.querySelector(`#newEmail-${studentId}`).value || currentStudent.email,
+              isEnrolled: document.querySelector(`#newIsEnrolled-${studentId}`).checked
+          };
+          console.log("Перед відправкою:", updatedSt);
 
-    fetch(`${BASE_URL}/${studentId}`, {
-        method: 'PUT',
-        body: JSON.stringify(updatedSt),
-        headers: { "Content-Type": "application/json" }
-    })
-    .then(() => getStudents().then(students => renderStudents(students)))
-    .catch(error => console.error(error));
+          return fetch(`${BASE_URL}/${studentId}`, {
+              method: 'PUT',
+              body: JSON.stringify(updatedSt),
+              headers: { "Content-Type": "application/json" }
+          });
+      })
+      .then(r => r.json())
+      .then(data => {
+          console.log(data);
+          alert(`Студент ${data.name} оновлений!`);
+          return getStudents().then(students => renderStudents(students));
+      })
+      .catch(error => console.error(error));
+      
+      document.querySelectorAll('.updateBtn').forEach(button => {
+        button.addEventListener('click', updateStudent);
+    });
+    document.querySelectorAll('.deleteBtn').forEach(button => {
+        button.addEventListener('click', deleteStudent);
+    });
+    
 }
+
 
 function deleteStudent(e) {
     e.preventDefault();

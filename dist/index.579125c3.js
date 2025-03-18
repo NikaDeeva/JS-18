@@ -5,39 +5,36 @@ const postNew = document.querySelector('#add-student-form');
 const studentsTable = document.querySelector('#students-table');
 // Отримання студентів
 function getStudents() {
-    return fetch(BASE_URL).then((response)=>response.json()).then((data)=>{
-        console.log(data); // Додаємо лог для перевірки
-        return data;
+    return fetch(BASE_URL).then((response)=>{
+        if (!response.ok) throw new Error("\u041F\u043E\u043C\u0438\u043B\u043A\u0430 \u0437\u0430\u0432\u0430\u043D\u0442\u0430\u0436\u0435\u043D\u043D\u044F \u0441\u0442\u0443\u0434\u0435\u043D\u0442\u0456\u0432");
+        return response.json();
     }).catch((error)=>console.error(error));
 }
 // Функція рендерингу студентів
 function renderStudents(students) {
-    if (!Array.isArray(students)) {
-        console.error(students);
-        return;
-    }
+    if (!Array.isArray(students)) return console.error(students);
     studentsTable.innerHTML = students.map((student)=>`
         <tr data-id="${student.id}">
           <td>${student.id}</td>
           <td>
-            ${student.name}
-            <input type="text" id="newName-${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{435} \u{456}\u{43C}'\u{44F}">
+           <p class="currentName"> ${student.name} </p>
+            <input type="text" class="newName" data-id="${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{435} \u{456}\u{43C}'\u{44F}">
           </td>
           <td>
-            ${student.course}
-            <input type="text" id="newCourse-${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{438}\u{439} \u{43A}\u{443}\u{440}\u{441}">
+           <p class="currentCourse"> ${student.course}</p>
+            <input type="text" class="newCourse" data-id="${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{438}\u{439} \u{43A}\u{443}\u{440}\u{441}">
           </td>
           <td>
-            ${student.skills}
-            <input type="text" id="newSkills-${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{456} \u{43D}\u{430}\u{432}\u{438}\u{447}\u{43A}\u{438}">
+           <p class="currentSkills"> ${student.skills}</p>
+            <input type="text" class="newSkills" data-id="${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{456} \u{43D}\u{430}\u{432}\u{438}\u{447}\u{43A}\u{438}">
           </td>
           <td>
-            ${student.email}
-            <input type="email" id="newEmail-${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{438}\u{439} email">
+           <p class="currentEmail"> ${student.email}</p>
+            <input type="email" class="newEmail" data-id="${student.id}" placeholder="\u{41D}\u{43E}\u{432}\u{438}\u{439} email">
           </td>
           <td>
             ${student.isEnrolled ? "\u0422\u0430\u043A" : "\u041D\u0456"}
-            <input type="checkbox" id="newIsEnrolled-${student.id}" ${student.isEnrolled ? "checked" : ""}>
+            <input type="checkbox" class="newIsEnrolled" data-id="${student.id}" ${student.isEnrolled ? "checked" : ""}>
           </td>
           <td>
             <button class="updateBtn" data-id="${student.id}">\u{41E}\u{43D}\u{43E}\u{432}\u{438}\u{442}\u{438}</button>
@@ -46,20 +43,16 @@ function renderStudents(students) {
         </tr>
       `).join('');
     document.querySelectorAll('.updateBtn').forEach((button)=>{
-        button.addEventListener('click', updateStudent);
+        button.addEventListener('click', handleUpdateStudent);
     });
     document.querySelectorAll('.deleteBtn').forEach((button)=>{
-        button.addEventListener('click', deleteStudent);
+        button.addEventListener('click', handleDeleteStudent);
     });
 }
-// Викликати при натисканні кнопки
 getBtn.addEventListener('click', ()=>{
-    getStudents().then((students)=>{
-        if (students) renderStudents(students);
-    });
+    getStudents().then((students)=>renderStudents(students));
 });
-// Додавання нового студента
-function addStudent(e) {
+postNew.addEventListener('submit', (e)=>{
     e.preventDefault();
     const newStudent = {
         name: document.querySelector('#name').value,
@@ -74,46 +67,35 @@ function addStudent(e) {
         headers: {
             "Content-Type": "application/json"
         }
-    }).then((response)=>response.json()).then(()=>getStudents().then((students)=>renderStudents(students))).catch((error)=>console.error(error));
-}
-postNew.addEventListener('submit', addStudent);
-function updateStudent(e) {
+    }).then((response)=>response.json()).then(()=>getStudents().then(renderStudents)).catch((error)=>console.error(error));
+});
+function handleUpdateStudent(e) {
     e.preventDefault();
     const studentId = e.target.dataset.id;
-    fetch(`${BASE_URL}/${studentId}`).then((r)=>r.json()).then((currentStudent)=>{
-        const updatedSt = {
-            name: document.querySelector(`#newName-${studentId}`).value || currentStudent.name,
-            course: document.querySelector(`#newCourse-${studentId}`).value || currentStudent.course,
-            skills: document.querySelector(`#newSkills-${studentId}`).value || currentStudent.skills,
-            email: document.querySelector(`#newEmail-${studentId}`).value || currentStudent.email,
-            isEnrolled: document.querySelector(`#newIsEnrolled-${studentId}`).checked
-        };
-        console.log("\u041F\u0435\u0440\u0435\u0434 \u0432\u0456\u0434\u043F\u0440\u0430\u0432\u043A\u043E\u044E:", updatedSt);
-        return fetch(`${BASE_URL}/${studentId}`, {
-            method: 'PUT',
-            body: JSON.stringify(updatedSt),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
-    }).then((r)=>r.json()).then((data)=>{
-        console.log(data);
-        alert(`\u{421}\u{442}\u{443}\u{434}\u{435}\u{43D}\u{442} ${data.name} \u{43E}\u{43D}\u{43E}\u{432}\u{43B}\u{435}\u{43D}\u{438}\u{439}!`);
-        return getStudents().then((students)=>renderStudents(students));
-    }).catch((error)=>console.error(error));
-    document.querySelectorAll('.updateBtn').forEach((button)=>{
-        button.addEventListener('click', updateStudent);
-    });
-    document.querySelectorAll('.deleteBtn').forEach((button)=>{
-        button.addEventListener('click', deleteStudent);
-    });
+    const updatedSt = {
+        name: document.querySelector(`.newName[data-id='${studentId}']`).value || document.querySelector('.currentName').textContent,
+        course: document.querySelector(`.newCourse[data-id='${studentId}']`).value || document.querySelector('.currentCourse').textContent,
+        skills: document.querySelector(`.newSkills[data-id='${studentId}']`).value || document.querySelector('.currentSkills').textContent,
+        email: document.querySelector(`.newEmail[data-id='${studentId}']`).value || document.querySelector('.currentEmail').textContent,
+        isEnrolled: document.querySelector(`.newIsEnrolled[data-id='${studentId}']`).checked
+    };
+    fetch(`${BASE_URL}/${studentId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updatedSt),
+        headers: {
+            "Content-Type": "application/json"
+        }
+    }).then((response)=>{
+        if (!response.ok) throw new Error("\u041F\u043E\u043C\u0438\u043B\u043A\u0430 \u043E\u043D\u043E\u0432\u043B\u0435\u043D\u043D\u044F \u0441\u0442\u0443\u0434\u0435\u043D\u0442\u0430");
+        return response.json();
+    }).then(()=>getStudents().then(renderStudents)).catch((error)=>console.error(error));
 }
-function deleteStudent(e) {
+function handleDeleteStudent(e) {
     e.preventDefault();
     const studentId = e.target.dataset.id;
     fetch(`${BASE_URL}/${studentId}`, {
         method: 'DELETE'
-    }).then(()=>getStudents().then((students)=>renderStudents(students))).catch((error)=>console.error(error));
+    }).then(()=>getStudents().then(renderStudents)).catch((error)=>console.error(error));
 }
 
 //# sourceMappingURL=index.579125c3.js.map

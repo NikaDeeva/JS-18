@@ -14,6 +14,21 @@ function getStudents() {
         .catch(error => console.error(error));
 }
 
+// const fetchStudents = async () => {
+//     const response = await fetch('http://localhost:3000/students');
+//           const students = await response.json();
+//           return students;
+// }
+// const getStudents = async () => {
+//     try {
+//         const students = await fetchStudents();
+//         console.log(students);
+//     }
+//     catch (error) {
+// console.log(error);
+//     }
+// };
+// getStudents();
 // Функція рендерингу студентів
 function renderStudents(students) {
     if (!Array.isArray(students)) return console.error(students);
@@ -57,9 +72,9 @@ function renderStudents(students) {
     });
 }
 
-getBtn.addEventListener('click', () => {
-    getStudents().then(students => renderStudents(students));
-});
+getBtn.addEventListener('click', 
+    getStudents()
+);
 
 postNew.addEventListener('submit', (e) => {
     e.preventDefault();

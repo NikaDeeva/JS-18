@@ -15,23 +15,11 @@
       "id": "3"
     },
     {
-      "name": "Natasha",
-      "course": {},
-      "skills": {},
-      "email": "natasha.ivanova@example.com",
-      "isEnrolled": true,
-      "id": "4"
-    },
-    {
       "id": "5",
-      "name": "Mykola Bondarenko",
+      "name": "Nikita Shevchenko",
       "age": 15,
       "course": "Cybersecurity",
-      "skills": [
-        "Networking",
-        "Ethical Hacking",
-        "Linux"
-      ],
+      "skills": "Networking,Ethical Hacking,Linux",
       "email": "mykola.bondarenko@example.com",
       "isEnrolled": true
     },
@@ -42,6 +30,14 @@
       "skills": "Python, Pandas",
       "email": "valeria127@gmail.com",
       "isEnrolled": false
+    },
+    {
+      "id": "2691",
+      "name": "Test",
+      "course": "Backend",
+      "skills": "Nothing",
+      "email": "test@example.com",
+      "isEnrolled": true
     }
   ]
 }
